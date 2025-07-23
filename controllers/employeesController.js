@@ -1,0 +1,60 @@
+const Employee = require('../models/employeeModel');
+
+exports.getEmployee = async (req, res, next) => {
+    try {
+        const employee = await Employee.findById(req.params.id);
+        if (!employee) {
+            return next(new AppError('Employee not found', 404));
+        }
+        res.json(employee);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getAllEmployees = async (req, res, next) => {
+    try {
+        const { role, search } = req.query;
+        const query = {};
+        if (role) query.role = role;
+        if (search) query.name = { $regex: search, $options: 'i' }; // Case-insensitive search
+        const employees = await Employee.find(query);
+
+        res.json(employees);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.updateEmployee = async (req, res, next) => {
+    try {
+        const { name, email, phoneNumber, position, department, joiningDate } = req.body;
+        const updatedData = { name, email, phoneNumber, position, department, joiningDate };
+        // if (!name || !email) {
+        //     return next(new AppError('Name and email are required', 400));
+        // }
+        const employee = await Employee.findByIdAndUpdate(
+            req.params.id,
+            updatedData,
+            { new: true, runValidators: true }
+        );
+        if (!employee) {
+            return next(new AppError('Employee not found', 404));
+        }
+        res.json(employee);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.deleteEmployee = async (req, res, next) => {
+    try {
+        const employee = await Employee.findByIdAndDelete(req.params.id);
+        if (!employee) {
+            return next(new AppError('Employee not found', 404));
+        }
+        res.json({ message: 'Employee deleted' });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -1,0 +1,91 @@
+const path = require('path');
+const express = require('express');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const csrf = require('csurf');
+
+const AppError = require('./middleware/appError');
+const authRouter = require('./routes/authRoutes');
+const candidateRouter = require('./routes/candidateRoutes');
+const employeeRouter = require('./routes/employeesRoutes');
+
+const app = express();
+
+app.set('views', path.join(__dirname, 'views'));
+
+// CORS configuration
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+}));
+app.options('*', cors());
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Security headers
+app.use(helmet());
+
+// Development logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+}
+
+// Rate limiting
+// const limiter = rateLimit({
+//     max: 100,
+//     windowMs: 60 * 60 * 1000,
+//     message: 'Too many requests from this IP, please try again in an hour!',
+// });
+// app.use('/api', limiter);
+
+// Body parsing
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+
+// CSRF protection with debugging
+const csrfProtection = csrf({
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+    },
+    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+});
+app.use((req, res, next) => {
+    // if (req.method === 'POST' && req.path.startsWith('/api/v1/auth')) {
+    //     console.log('CSRF Token from header:', req.headers['x-csrf-token']);
+    //     console.log('CSRF Token from cookie:', req.cookies['_csrf']);
+    // }
+    csrfProtection(req, res, next);
+});
+
+// Expose CSRF token endpoint
+app.get('/api/v1/auth/csrf-token', (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
+
+// Data sanitization
+app.use(mongoSanitize());
+app.use(xss());
+
+// Routes
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/candidates', candidateRouter);
+app.use('/api/v1/employees', employeeRouter);
+
+// Handle 404
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// Error handling
+app.use(require('./middleware/error'));
+
+module.exports = app;
