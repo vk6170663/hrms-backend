@@ -71,6 +71,10 @@ app.get('/api/v1/auth/csrf-token', (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
 });
 
+app.get('/', (req, res) => {
+    res.json({ message: 'Welcome to HRMS API' });
+});
+
 // Data sanitization
 app.use(mongoSanitize());
 app.use(xss());
