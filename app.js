@@ -18,18 +18,12 @@ const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
 
-const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:5173'];
 app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
+    origin: ['http://localhost:5173', process.env.CLIENT_URL], // Match Vite dev server
+    credentials: true, // Allow cookies/auth credentials
+    optionsSuccessStatus: 200, // Some browsers require this for OPTIONS
 }));
-app.options('*', cors());
+app.options('*', cors()); // Handle preflight requests
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
