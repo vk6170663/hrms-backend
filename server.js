@@ -12,7 +12,7 @@ const app = require('./app');
 
 const startServer = async () => {
     try {
-        await connectDB(); // Await the connection
+        await connectDB();
         const port = process.env.PORT || 5000;
         const server = app.listen(port, () => {
             console.log(`App running on port ${port}...`);
@@ -39,3 +39,5 @@ process.on('SIGTERM', () => {
         console.log('💥 Process terminated!');
     });
 });
+
+module.exports = app;
