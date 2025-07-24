@@ -4,7 +4,6 @@ const {
     createCandidate,
     getCandidate,
     getAllCandidates,
-    toEmployee,
     downloadResume,
     updateCandidate,
     deleteCandidate,
@@ -27,7 +26,7 @@ router.get('/:id', getCandidate);
 router.get('/', getAllCandidates);
 
 // Download candidate resume as PDF
-router.get('/:id/pdf', downloadResume);
+router.get('/:id/resume', downloadResume);
 
 // Update a candidate
 router.patch('/:id', upload.single('resume'), updateCandidate);

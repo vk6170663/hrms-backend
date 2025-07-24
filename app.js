@@ -7,7 +7,6 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const csrf = require('csurf');
 
 const AppError = require('./middleware/appError');
 const authRouter = require('./routes/authRoutes');
@@ -49,33 +48,10 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-// CSRF protection with debugging
-const csrfProtection = csrf({
-    cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-    },
-    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
-});
-app.use((req, res, next) => {
-    // if (req.method === 'POST' && req.path.startsWith('/api/v1/auth')) {
-    //     console.log('CSRF Token from header:', req.headers['x-csrf-token']);
-    //     console.log('CSRF Token from cookie:', req.cookies['_csrf']);
-    // }
-    csrfProtection(req, res, next);
-});
-
-// Expose CSRF token endpoint
-app.get('/api/v1/auth/csrf-token', (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
-});
-
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to HRMS API' });
 });
 
-// Data sanitization
 app.use(mongoSanitize());
 app.use(xss());
 

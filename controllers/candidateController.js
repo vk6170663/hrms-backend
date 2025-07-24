@@ -70,10 +70,11 @@ exports.getCandidate = async (req, res, next) => {
 
 exports.getAllCandidates = async (req, res, next) => {
     try {
-        const { status, search } = req.query;
+        const { status, search, department } = req.query;
         const query = {};
 
         if (status) query.status = status;
+        if (department) query.department = department; // Add department filter
         if (search) query.fullName = { $regex: search, $options: 'i' };
 
         const candidates = await Candidate.find(query);
@@ -103,7 +104,7 @@ exports.downloadResume = async (req, res, next) => {
         });
 
         const pdfBytes = await pdfDoc.save();
-        const filePath = path.join(__dirname, `../resumes/${candidate._id}.pdf`);
+        const filePath = path.join(__dirname, `../uploads/resumes/${candidate._id}.pdf`);
 
         await fs.writeFile(filePath, pdfBytes);
 
@@ -169,7 +170,7 @@ exports.updateCandidateStatus = async (req, res, next) => {
 
         // If already selected, prevent double promotion
         const existingEmployee = await Employee.findOne({ email: candidate.email });
-        console.log(existingEmployee);
+        console.log('Existing Employee:', existingEmployee);
 
         if (status === 'Selected' && existingEmployee) {
             return next(new AppError('This candidate is already an employee', 400));
@@ -178,26 +179,30 @@ exports.updateCandidateStatus = async (req, res, next) => {
         candidate.status = status;
         await candidate.save();
 
-        // Auto-create employee if status is 'Selected'
+        // Auto-create employee and delete candidate if status is 'Selected'
         if (status === 'Selected') {
             const newEmployee = new Employee({
                 name: candidate.fullName,
                 email: candidate.email,
                 phoneNumber: candidate.phoneNumber,
                 position: candidate.position,
-                department: candidate.department
+                department: candidate.department,
             });
             await newEmployee.save();
+
+            // Delete the candidate after successful employee creation
+            await Candidate.findByIdAndDelete(candidateId);
+            console.log(`Candidate ${candidateId} deleted after promotion to employee`);
         }
 
         res.status(200).json({
             status: 'success',
-            message: `Candidate status updated to '${status}'`,
-            data: candidate
+            message: `Candidate status updated to '${status}'${status === 'Selected' ? ' and candidate deleted' : ''}`,
+            data: status === 'Selected' ? null : candidate, // No data if deleted
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('Error in updateCandidateStatus:', error);
         next(error);
     }
 };
