@@ -10,12 +10,20 @@ process.on('uncaughtException', err => {
 dotenv.config({ path: './config.env' });
 const app = require('./app');
 
-connectDB();
+const startServer = async () => {
+    try {
+        await connectDB(); // Await the connection
+        const port = process.env.PORT || 5000;
+        const server = app.listen(port, () => {
+            console.log(`App running on port ${port}...`);
+        });
+    } catch (err) {
+        console.error('Server startup error:', err);
+        process.exit(1);
+    }
+};
 
-const port = process.env.PORT || 5000;
-const server = app.listen(port, () => {
-    console.log(`App running on port ${port}...`);
-});
+startServer();
 
 process.on('unhandledRejection', err => {
     console.log('UNHANDLED REJECTION! 💥 Shutting down...');
