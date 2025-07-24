@@ -17,11 +17,7 @@ const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(cors({
-    origin: ['http://localhost:5173', process.env.CLIENT_URL], // Match Vite dev server
-    credentials: true, // Allow cookies/auth credentials
-    optionsSuccessStatus: 200, // Some browsers require this for OPTIONS
-}));
+app.use(cors());
 app.options('*', cors()); // Handle preflight requests
 
 // Serve static files
