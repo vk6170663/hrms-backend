@@ -17,8 +17,15 @@ const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(cors());
-app.options('*', cors()); // Handle preflight requests
+const corsOptions = {
+    origin: [process.env.CLIENT_URL || 'https://psqr.vercel.app', 'http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
