@@ -1,6 +1,8 @@
+const dbConnect = require('../config/db');
 const Employee = require('../models/employeeModel');
 
 exports.getEmployee = async (req, res, next) => {
+    await dbConnect();
     try {
         const employee = await Employee.findById(req.params.id);
         if (!employee) {
@@ -13,6 +15,7 @@ exports.getEmployee = async (req, res, next) => {
 };
 
 exports.getAllEmployees = async (req, res, next) => {
+    await dbConnect();
     try {
         const { position, search } = req.query;
         const query = {};
@@ -27,6 +30,7 @@ exports.getAllEmployees = async (req, res, next) => {
 };
 
 exports.updateEmployee = async (req, res, next) => {
+    await dbConnect();
     try {
         const { name, email, phoneNumber, position, department, joiningDate } = req.body;
         const updatedData = { name, email, phoneNumber, position, department, joiningDate };
@@ -48,6 +52,7 @@ exports.updateEmployee = async (req, res, next) => {
 };
 
 exports.deleteEmployee = async (req, res, next) => {
+    await dbConnect();
     try {
         const employee = await Employee.findByIdAndDelete(req.params.id);
         if (!employee) {

@@ -4,8 +4,10 @@ const { PDFDocument } = require('pdf-lib');
 const fs = require('fs').promises;
 const path = require('path');
 const AppError = require('../middleware/appError');
+const dbConnect = require('../config/db');
 
 exports.createCandidate = async (req, res, next) => {
+    await dbConnect();
     try {
         const {
             fullName,
@@ -57,6 +59,7 @@ exports.createCandidate = async (req, res, next) => {
 };
 
 exports.getCandidate = async (req, res, next) => {
+    await dbConnect();
     try {
         const candidate = await Candidate.findById(req.params.id);
         if (!candidate) {
@@ -69,6 +72,7 @@ exports.getCandidate = async (req, res, next) => {
 };
 
 exports.getAllCandidates = async (req, res, next) => {
+    await dbConnect();
     try {
         const { status, search, department } = req.query;
         const query = {};
@@ -85,6 +89,7 @@ exports.getAllCandidates = async (req, res, next) => {
 };
 
 exports.downloadResume = async (req, res, next) => {
+    await dbConnect();
     try {
         const candidate = await Candidate.findById(req.params.id);
         if (!candidate) {
@@ -119,6 +124,7 @@ exports.downloadResume = async (req, res, next) => {
 
 
 exports.updateCandidate = async (req, res, next) => {
+    await dbConnect();
     try {
         const { fullName, email, phoneNumber, position, department, experience } = req.body;
 
@@ -155,6 +161,7 @@ exports.updateCandidate = async (req, res, next) => {
 };
 
 exports.updateCandidateStatus = async (req, res, next) => {
+    await dbConnect();
     try {
         const { status } = req.body;
         const candidateId = req.params.id;
@@ -208,6 +215,7 @@ exports.updateCandidateStatus = async (req, res, next) => {
 };
 
 exports.deleteCandidate = async (req, res, next) => {
+    await dbConnect();
     try {
         const candidate = await Candidate.findByIdAndDelete(req.params.id);
         if (!candidate) {
@@ -220,6 +228,7 @@ exports.deleteCandidate = async (req, res, next) => {
 };
 
 exports.deleteAllCandidates = async (req, res, next) => {
+    await dbConnect();
     try {
         const result = await Candidate.deleteMany({});
         res.status(200).json({

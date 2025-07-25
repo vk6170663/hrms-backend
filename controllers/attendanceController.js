@@ -1,7 +1,9 @@
+const dbConnect = require('../config/db');
 const Attendance = require('../models/attendanceModel');
 const Employee = require('../models/employeeModel');
 
 const getTodayAttendanceMerged = async (req, res) => {
+    await dbConnect();
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -49,6 +51,7 @@ const getTodayAttendanceMerged = async (req, res) => {
 };
 
 const getAttendance = async (req, res) => {
+    await dbConnect();
     try {
         const { status, search } = req.query;
 
@@ -69,6 +72,7 @@ const getAttendance = async (req, res) => {
 };
 
 const getAttendanceById = async (req, res) => {
+    await dbConnect();
     try {
         const attendance = await Attendance.findById(req.params.id).populate('employeeId');
         if (!attendance) return res.status(404).json({ message: 'Attendance not found' });
@@ -79,6 +83,7 @@ const getAttendanceById = async (req, res) => {
 };
 
 const addAttendance = async (req, res) => {
+    await dbConnect();
     const { employeeId, status, tasks } = req.body;
 
     if (!employeeId || !status || !tasks) {
@@ -100,6 +105,7 @@ const addAttendance = async (req, res) => {
 };
 
 const updateAttendance = async (req, res) => {
+    await dbConnect();
     const { status, tasks } = req.body;
 
     try {

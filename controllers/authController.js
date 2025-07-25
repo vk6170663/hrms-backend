@@ -2,8 +2,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const AppError = require('../middleware/appError');
+const dbConnect = require('../config/db');
 
 exports.login = async (req, res, next) => {
+    await dbConnect();
     const { email, password } = req.body;
     if (!email || !password) return next(new AppError('Email and password are required', 400));
 
@@ -34,6 +36,7 @@ exports.login = async (req, res, next) => {
 };
 
 exports.register = async (req, res, next) => {
+    await dbConnect();
     const { email, password, passwordConfirm, role } = req.body;
 
     // Validate required fields
@@ -67,6 +70,7 @@ exports.register = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
+    await dbConnect();
     try {
         res.clearCookie('jwt', {
             httpOnly: true,
@@ -80,6 +84,7 @@ exports.logout = async (req, res, next) => {
 };
 
 exports.getMe = async (req, res, next) => {
+    await dbConnect();
     try {
         const user = await User.findById(req.user.id);
         if (!user) {

@@ -1,25 +1,31 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-let cachedDb = null;
+let cached = global.mongoose || { conn: null, promise: null };
 
-const connectDB = async () => {
-    if (cachedDb) {
-        return cachedDb;
+if (!global.mongoose) {
+    global.mongoose = cached;
+}
+
+async function dbConnect() {
+    if (cached.conn) {
+        return cached.conn;
     }
 
-    try {
-        const dbUri = process.env.DATABASE.replace('<PASSWORD>', encodeURIComponent(process.env.DATABASE_PASSWORD));
-        cachedDb = await mongoose.connect(dbUri, {
-            serverSelectionTimeoutMS: 30000,
-            bufferCommands: false, // Requires connection to be ready
-            autoIndex: false, // Optional: Disable auto-indexing for performance
-        });
-        console.log('DB connection successful!');
-        return cachedDb;
-    } catch (err) {
-        console.error('MongoDB connection error:', err);
-        throw err;
-    }
-};
+    if (!cached.conn) {
+        const opts = {
+            bufferCommands: false,
+            useNewUrlParser: true,
+            useColors: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            maxPoolSize: 20,
+        };
 
-module.exports = connectDB;
+        cached.conn = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => mongoose);
+    }
+
+    cached.conn = await cached.conn;
+    return cached.conn;
+}
+
+module.exports = dbConnect;
