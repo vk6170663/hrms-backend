@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 let cached = global.mongoose || { conn: null, promise: null };
 
@@ -8,23 +8,37 @@ if (!global.mongoose) {
 
 async function dbConnect() {
     if (cached.conn) {
+        console.log('Using cached MongoDB connection');
         return cached.conn;
     }
 
-    if (!cached.conn) {
+    if (!cached.promise) {
         const opts = {
-            bufferCommands: false,
-            useNewUrlParser: true,
-            useColors: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-            maxPoolSize: 20,
+            bufferCommands: false, // As per your setup
+            serverSelectionTimeoutMS: 10000, // Balanced for local and Vercel
+            maxPoolSize: 10, // Prevent connection storms
+            autoIndex: false,
         };
 
-        cached.conn = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => mongoose);
+        const dbUri = process.env.MONGODB_URI ||
+            (process.env.DATABASE && process.env.DATABASE_PASSWORD
+                ? process.env.DATABASE.replace('<PASSWORD>', encodeURIComponent(process.env.DATABASE_PASSWORD))
+                : undefined);
+
+        if (!dbUri) {
+            throw new Error('Missing MONGODB_URI or DATABASE/DATABASE_PASSWORD in config.env');
+        }
+
+        cached.promise = mongoose.connect(dbUri, opts).then((mongoose) => {
+            console.log('MongoDB connection established');
+            return mongoose;
+        }).catch((err) => {
+            console.error('MongoDB connection failed:', err.message);
+            throw err;
+        });
     }
 
-    cached.conn = await cached.conn;
+    cached.conn = await cached.promise;
     return cached.conn;
 }
 
