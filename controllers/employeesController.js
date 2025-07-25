@@ -14,10 +14,10 @@ exports.getEmployee = async (req, res, next) => {
 
 exports.getAllEmployees = async (req, res, next) => {
     try {
-        const { role, search } = req.query;
+        const { position, search } = req.query;
         const query = {};
-        if (role) query.role = role;
-        if (search) query.name = { $regex: search, $options: 'i' }; // Case-insensitive search
+        if (position) query.position = position;
+        if (search) query.name = { $regex: search, $options: 'i' };
         const employees = await Employee.find(query);
 
         res.json(employees);

@@ -12,6 +12,7 @@ const AppError = require('./middleware/appError');
 const authRouter = require('./routes/authRoutes');
 const candidateRouter = require('./routes/candidateRoutes');
 const employeeRouter = require('./routes/employeesRoutes');
+const attendanceRouter = require('./routes/attendanceRoutes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use(xss());
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/candidates', candidateRouter);
 app.use('/api/v1/employees', employeeRouter);
+app.use('/api/v1/attendance', attendanceRouter);
 
 // Handle 404
 app.all('*', (req, res, next) => {
