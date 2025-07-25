@@ -13,6 +13,7 @@ const authRouter = require('./routes/authRoutes');
 const candidateRouter = require('./routes/candidateRoutes');
 const employeeRouter = require('./routes/employeesRoutes');
 const attendanceRouter = require('./routes/attendanceRoutes');
+const leaveRouter = require('./routes/leavesRoutes');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/candidates', candidateRouter);
 app.use('/api/v1/employees', employeeRouter);
 app.use('/api/v1/attendance', attendanceRouter);
+app.use('/api/v1/leaves', leaveRouter);
 
 // Handle 404
 app.all('*', (req, res, next) => {

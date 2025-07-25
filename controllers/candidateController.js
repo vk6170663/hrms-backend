@@ -5,6 +5,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const AppError = require('../middleware/appError');
 const dbConnect = require('../config/db');
+const Attendance = require('../models/attendanceModel');
 
 exports.createCandidate = async (req, res, next) => {
     await dbConnect();
@@ -177,7 +178,6 @@ exports.updateCandidateStatus = async (req, res, next) => {
 
         // If already selected, prevent double promotion
         const existingEmployee = await Employee.findOne({ email: candidate.email });
-        console.log('Existing Employee:', existingEmployee);
 
         if (status === 'Selected' && existingEmployee) {
             return next(new AppError('This candidate is already an employee', 400));
@@ -197,7 +197,16 @@ exports.updateCandidateStatus = async (req, res, next) => {
             });
             await newEmployee.save();
 
-            // Delete the candidate after successful employee creation
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const attendance = new Attendance({
+                employeeId: newEmployee._id,
+                date: today,
+                status: 'Present',
+                tasks: 'No tasks assigned',
+            });
+            await attendance.save();
+
             await Candidate.findByIdAndDelete(candidateId);
             console.log(`Candidate ${candidateId} deleted after promotion to employee`);
         }

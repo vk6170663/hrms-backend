@@ -2,6 +2,7 @@ const dbConnect = require('../config/db');
 const Attendance = require('../models/attendanceModel');
 const Employee = require('../models/employeeModel');
 
+// backend/api/attendance.js
 const getTodayAttendanceMerged = async (req, res) => {
     await dbConnect();
     try {
@@ -20,30 +21,49 @@ const getTodayAttendanceMerged = async (req, res) => {
         const attendanceQuery = { date: { $gte: today } };
         if (status) {
             attendanceQuery.status = status;
+        } else {
+            attendanceQuery.status = { $in: ['Present', 'Absent'] };
         }
 
+        // Fetch all employees and attendance records
         const [employees, attendance] = await Promise.all([
-            Employee.find(employeeQuery),
-            Attendance.find(attendanceQuery),
+            Employee.find(employeeQuery).lean(),
+            Attendance.find(attendanceQuery).lean(),
         ]);
 
+        // Create a map of attendance records by employeeId
         const attendanceMap = new Map();
         attendance.forEach((record) => {
             attendanceMap.set(record.employeeId.toString(), record);
         });
 
+        // Merge employees with attendance data
         const result = employees.map((emp) => {
             const attendanceRecord = attendanceMap.get(emp._id.toString());
             return {
                 _id: attendanceRecord?._id || null,
-                employee: emp,
+                employee: {
+                    _id: emp._id,
+                    name: emp.name,
+                    email: emp.email,
+                    phoneNumber: emp.phoneNumber,
+                    position: emp.position,
+                    department: emp.department,
+                    joiningDate: emp.joiningDate,
+                    createdAt: emp.createdAt,
+                },
                 date: attendanceRecord?.date || today,
                 status: attendanceRecord?.status || '',
                 tasks: attendanceRecord?.tasks || '',
             };
         });
 
-        res.json(result);
+        // Filter out records that don't match the status filter (if provided)
+        const filteredResult = status
+            ? result.filter(record => record.status === status)
+            : result.filter(record => record.status === 'Present' || record.status === 'Absent');
+
+        res.json(filteredResult);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: err.message });

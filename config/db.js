@@ -14,9 +14,9 @@ async function dbConnect() {
 
     if (!cached.promise) {
         const opts = {
-            bufferCommands: false, // As per your setup
-            serverSelectionTimeoutMS: 10000, // Balanced for local and Vercel
-            maxPoolSize: 10, // Prevent connection storms
+            bufferCommands: false,
+            serverSelectionTimeoutMS: 10000,
+            maxPoolSize: 10,
             autoIndex: false,
         };
 
